@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr"> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUNIndex Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-chart-line"></i> TUNIndex Pro
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link active" href="#upload-section" data-section="upload-section"><i class="fas fa-upload"></i> Téléverser</a></li>
+                <li class="nav-item"><a class="nav-link" href="#overview-section" data-section="overview-section"><i class="fas fa-eye"></i> Aperçu</a></li>
+                <li class="nav-item"><a class="nav-link" href="#analysis-section" data-section="analysis-section"><i class="fas fa-search-dollar"></i> Analyse</a></li>
+                <li class="nav-item"><a class="nav-link" href="#modeling-section" data-section="modeling-section"><i class="fas fa-cogs"></i> Modélisation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#prediction-section" data-section="prediction-section"><i class="fas fa-bullseye"></i> Prédire</a></li>
+                <li class="nav-item"><a class="nav-link" href="#export-section" data-section="export-section"><i class="fas fa-file-export"></i> Exporter</a></li>
+            </ul>
+            <!-- <div class="dropdown mr-2">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-language"></i> Français
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="languageDropdown">
+                    <a class="dropdown-item" href="#" data-lang="fr">Français</a>
+                    <a class="dropdown-item" href="#" data-lang="en">English</a>
+                </div>
+            </div> -->
+            <button id="darkModeToggle" class="btn btn-sm btn-outline-light">
+                <i class="fas fa-moon"></i> <span id="darkModeText">Mode Sombre</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div id="alert-container"></div>
+
+        <section id="upload-section" class="page-section card-section">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-cloud-upload-alt"></i> 1. Téléverser les Données CSV</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="fileUpload">Sélectionnez le fichier CSV pour TUNIndex :</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="fileUpload" accept=".csv" aria-describedby="fileUploadHelp">
+                        <label class="custom-file-label" for="fileUpload" data-browse="Parcourir">Choisir un fichier...</label>
+                    </div>
+                    <small id="fileUploadHelp" class="form-text text-muted">
+                        Veuillez téléverser un fichier CSV avec des délimiteurs standards (virgule, point-virgule, ou tabulation).
+                    </small>
+                </div>
+                <button class="btn btn-primary btn-gradient btn-rounded shadow-hover" onclick="uploadFile()">
+                    <i class="fas fa-cogs"></i> Téléverser et Traiter
+                </button>
+                
+                <div id="uploadInfoContainer" class="mt-3" style="display: none;"> 
+                    <button class="btn btn-outline-secondary btn-sm btn-block mb-2" type="button" data-toggle="collapse" data-target="#uploadInfoDetails" aria-expanded="false" aria-controls="uploadInfoDetails" id="toggleUploadInfoBtn">
+                        <i class="fas fa-chevron-down"></i> Afficher/Masquer les détails du fichier
+                    </button>
+                    <div class="collapse" id="uploadInfoDetails">
+                        <div id="uploadInfo" class="result-box">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="overview-section" class="page-section card-section" style="display:none;">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-chart-pie"></i> 2. Aperçu des Données</h2>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-info btn-rounded shadow-hover mb-3" onclick="fetchDataOverview()">
+                    <i class="fas fa-sync-alt"></i> Charger/Rafraîchir l'Aperçu
+                </button>
+                <div id="dataOverviewContent" class="mt-3 result-box">
+                    </div>
+            </div>
+        </section>
+
+        <section id="analysis-section" class="page-section card-section" style="display:none;">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-analytics"></i> 3. Analyse des Données</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="sub-card">
+                            <div class="sub-card-header">
+                                <h4><i class="fas fa-ruler-combined"></i> Analyse de Stationnarité 
+                                    <i class="fas fa-info-circle text-muted small" data-toggle="tooltip" data-placement="top" title="Tests pour vérifier si les propriétés statistiques de la série temporelle (moyenne, variance) sont constantes dans le temps."></i>
+                                </h4>
+                            </div>
+                            <div class="sub-card-body">
+                                <button class="btn btn-info btn-sm btn-rounded shadow-hover mb-2" onclick="fetchStationarityAnalysis()">Lancer les Tests de Stationnarité</button>
+                                <div id="stationarityResults" class="mt-2 result-box"></div>
+                                <div class="chart-container mt-2">
+                                    <img id="acfPacfPlot" src="#" alt="Graphique ACF/PACF" class="img-fluid" style="display:none;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="sub-card">
+                            <div class="sub-card-header">
+                                <h4><i class="fas fa-link"></i> Analyse de Corrélation
+                                    <i class="fas fa-info-circle text-muted small" data-toggle="tooltip" data-placement="top" title="Mesure la relation linéaire entre différentes colonnes de données (ex: Ouverture, Haut, Bas, Clôture, Volume)."></i>
+                                </h4>
+                            </div>
+                            <div class="sub-card-body">
+                                <button class="btn btn-info btn-sm btn-rounded shadow-hover mb-2" onclick="fetchCorrelationAnalysis()">Lancer l'Analyse de Corrélation</button>
+                                <div id="correlationMatrix" class="mt-2 result-box table-responsive"></div>
+                                <div class="chart-container mt-2">
+                                    <img id="heatmapPlot" src="#" alt="Graphique Heatmap" class="img-fluid" style="display:none;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="modeling-section" class="page-section card-section" style="display:none;">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-brain"></i> 4. Entraînement et Évaluation des Modèles</h2>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-success btn-gradient btn-rounded shadow-hover mb-3" onclick="trainModels()">
+                    <i class="fas fa-play-circle"></i> Entraîner les Modèles
+                </button>
+                <div id="trainingStatus" class="mt-3 result-box"></div>
+                <div id="modelResults" class="mt-3 result-box" style="max-height: 400px; overflow-y: auto;"></div>
+                
+                <h4 class="mt-4"><i class="fas fa-clipboard-check"></i> Évaluation des Modèles</h4>
+                <button class="btn btn-warning btn-rounded shadow-hover mb-3" onclick="evaluateModels()">
+                    <i class="fas fa-vial"></i> Évaluer Modèles & Métriques
+                </button>
+                <div id="evaluationResults" class="mt-3 result-box">
+                    <h5><i class="fas fa-tachometer-alt"></i> Métriques :
+                        <i class="fas fa-info-circle text-muted small" data-toggle="tooltip" data-placement="top" title="Indicateurs de performance pour les modèles entraînés. Des valeurs plus basses pour les métriques d'erreur (MAE, MSE, RMSE, MAPE) sont meilleures. Un R2 plus élevé est meilleur."></i>
+                    </h5>
+                    <div class="row mb-3 filter-controls">
+                        <div class="col-md-4">
+                            <label for="filterModel" class="small" data-toggle="tooltip" data-placement="top" title="Sélectionnez un modèle spécifique pour voir ses métriques.">Filtrer par Modèle :</label>
+                            <select id="filterModel" class="form-control form-control-sm custom-select-sm">
+                                <option value="">Tous les Modèles</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterSet" class="small" data-toggle="tooltip" data-placement="top" title="Filtrez les métriques pour l'ensemble d'entraînement ou de test.">Filtrer par Ensemble :</label>
+                            <select id="filterSet" class="form-control form-control-sm custom-select-sm">
+                                <option value="">Tous les Ensembles</option>
+                                <option value="train">Entraînement (Train)</option>
+                                <option value="test">Test</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterMetricName" class="small" data-toggle="tooltip" data-placement="top" title="Sélectionnez une métrique de performance spécifique.">Filtrer par Métrique :</label>
+                            <select id="filterMetricName" class="form-control form-control-sm custom-select-sm">
+                                <option value="">Toutes les Métriques</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="evaluationMetricsTable" class="table-responsive"></div>
+                    <h5 class="mt-3"><i class="fas fa-chart-bar"></i> Graphiques :</h5>
+                    <div id="evaluationPlots"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="prediction-section" class="page-section card-section" style="display:none;">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-magic"></i> 5. Prédire les Valeurs Futures</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-5">
+                        <label for="modelSelect">Sélectionnez le Modèle :</label>
+                        <select id="modelSelect" class="form-control custom-select-sm">
+                            <option value="ETS">ETS (Lissage Exponentiel)</option>
+                            <option value="ARIMA">ARIMA</option>
+                            <option value="SVR">SVR (Régression à Vecteurs de Support)</option>
+                            <option value="XGBoost">XGBoost</option>
+                            <option value="MLP">MLP (Perceptron Multicouche)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="stepsInput" data-toggle="tooltip" data-placement="top" title="Nombre de pas de temps futurs (ex: jours) à prédire.">Nombre de Pas à Prédire :</label>
+                        <input type="number" id="stepsInput" class="form-control form-control-sm" value="10" min="1">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <button class="btn btn-primary btn-gradient btn-rounded shadow-hover btn-block" onclick="makePrediction()">
+                            <i class="fas fa-paper-plane"></i> Obtenir les Prédictions
+                        </button>
+                    </div>
+                </div>
+                <div id="futurePredictions" class="mt-3 result-box"></div>
+            </div>
+        </section>
+
+        <section id="export-section" class="page-section card-section" style="display:none;">
+            <div class="card-header">
+                <h2 class="section-title"><i class="fas fa-download"></i> 6. Exporter les Données</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">Choisissez le format d'exportation pour vos données et analyses.</p>
+                <div class="form-row align-items-center">
+                    <div class="form-group col-md-5">
+                        <label for="exportFormat">Sélectionnez le Format :</label>
+                        <select id="exportFormat" class="form-control custom-select-sm">
+                            <option value="csv" data-icon="fas fa-file-csv">&#xf6dd; CSV (Valeurs séparées par des virgules)</option>
+                            <option value="excel" data-icon="fas fa-file-excel">&#xf1c3; Excel (Classeur XLSX)</option>
+                            <option value="pdf" data-icon="fas fa-file-pdf">&#xf1c1; PDF (Document Portable)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-center pt-3">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="includePredictionsExport">
+                            <label class="custom-control-label" for="includePredictionsExport" data-toggle="tooltip" data-placement="top" title="Inclure les prédictions des modèles comme colonnes supplémentaires dans le fichier exporté.">Inclure les Prédictions</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3">
+                         <button class="btn btn-export btn-rounded shadow-hover btn-block" onclick="exportData()">
+                             <i class="fas fa-file-download"></i> Exporter
+                         </button>
+                    </div>
+                </div>
+                 <div id="pdfOptions" class="mt-3 border p-3 rounded bg-light" style="display: none;">
+                    <h5>Options d'Exportation PDF (Bientôt disponible)</h5>
+                    <p class="text-muted small">Personnalisez la mise en page, les graphiques à inclure, etc.</p>
+                    <!-- <div class="form-group">
+                        <label for="pdfLayout">Mise en page :</label>
+                        <select id="pdfLayout" class="form-control form-control-sm custom-select-sm">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Paysage</option>
+                        </select>
+                    </div>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="pdfIncludeCharts" checked>
+                        <label class="custom-control-label" for="pdfIncludeCharts">Inclure les graphiques</label>
+                    </div> -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span class="text-muted">TUNIndex Pro &copy; 2025. <a href="#" data-toggle="tooltip" data-placement="top" title="Consulter notre Politique de Confidentialité">Politique de Confidentialité</a> | <a href="#" data-toggle="tooltip" data-placement="top" title="Lire nos Conditions d'Utilisation">Conditions d'Utilisation</a></span>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
